@@ -24,7 +24,9 @@ object Waterdrop extends Logging {
 
   def main(args: Array[String]) {
 
-    CommandLineUtils.parser.parse(args, CommandLineArgs()) match {
+    var cmdArgs: CommandLineArgs =  CommandLineArgs("client", "D:\\javapro\\Waterdrop\\conf\\mysql_host03.conf",false)
+    var x: Option[CommandLineArgs] = Option(cmdArgs)
+    x match {
       case Some(cmdArgs) => {
         Common.setDeployMode(cmdArgs.deployMode)
         val configFilePath = getConfigFilePath(cmdArgs)
