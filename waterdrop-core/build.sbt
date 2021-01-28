@@ -12,10 +12,14 @@ val sparkVersion = "2.4.0"
 //     such as spark-core-xxx.jar, spark-sql-xxx.jar
 //   or jars in Hadoop distribution, such as hadoop-common-xxx.jar, hadoop-hdfs-xxx.jar
 lazy val providedDependencies = Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-sql" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming" % sparkVersion,
+  "org.apache.spark" %% "spark-core" % sparkVersion
+    excludeAll(ExclusionRule(organization="com.fasterxml.jackson.core")),
+  "org.apache.spark" %% "spark-sql" % sparkVersion
+    excludeAll(ExclusionRule(organization="com.fasterxml.jackson.core")),
+  "org.apache.spark" %% "spark-streaming" % sparkVersion
+    excludeAll(ExclusionRule(organization="com.fasterxml.jackson.core")),
   "org.apache.spark" %% "spark-hive" % sparkVersion
+    excludeAll(ExclusionRule(organization="com.fasterxml.jackson.core"))
 )
 
 // Change dependepcy scope to "provided" by : sbt -DprovidedDeps=true <task>
@@ -37,7 +41,6 @@ providedDeps match {
 unmanagedJars in Compile += file("lib/config-1.3.3-SNAPSHOT.jar")
 
 libraryDependencies ++= Seq(
-
   // ------ Spark Dependencies ---------------------------------
   // spark distribution doesn't provide this dependency.
   "org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion
@@ -66,7 +69,14 @@ libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpasyncclient" % "4.1.3",
   "redis.clients" % "jedis" % "2.9.0",
   "org.apache.commons" % "commons-pool2" % "2.8.0",
-  "net.minidev" % "json-smart" % "2.3"
+  "org.apache.hive" % "hive-jdbc" % "3.1.0"
+    excludeAll(ExclusionRule(organization="com.fasterxml.jackson.core"))
+    exclude("org.slf4j", "slf4j-log4j12")
+    exclude("org.apache.logging.log4j", "log4j-slf4j-impl"),
+  "net.minidev" % "json-smart" % "2.3",
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.6.7",
+  "com.fasterxml.jackson.core" % "jackson-core" % "2.7.9",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.7.1"
 ).map(_.exclude("com.typesafe", "config"))
 
 // TODO: exclude spark, hadoop by for all dependencies

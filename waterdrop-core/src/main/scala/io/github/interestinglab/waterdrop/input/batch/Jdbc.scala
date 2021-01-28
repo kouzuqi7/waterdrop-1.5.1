@@ -1,10 +1,14 @@
 package io.github.interestinglab.waterdrop.input.batch
 
+import java.sql.{Connection, DriverManager}
+import java.util.Properties
+
+import io.github.interestinglab.waterdrop.config.RegisterHiveSqlDialect
 import io.github.interestinglab.waterdrop.config.{Config, ConfigFactory}
 import io.github.interestinglab.waterdrop.apis.BaseStaticInput
 import io.github.interestinglab.waterdrop.config.TypesafeConfigUtils
-
 import org.apache.spark.sql.{DataFrameReader, Dataset, Row, SparkSession}
+
 import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConversions._
 
@@ -73,6 +77,7 @@ class Jdbc extends BaseStaticInput {
   }
 
   override def getDataset(spark: SparkSession): Dataset[Row] = {
+    RegisterHiveSqlDialect.register()
     jdbcReader(spark, config.getString("driver")).load()
   }
 }

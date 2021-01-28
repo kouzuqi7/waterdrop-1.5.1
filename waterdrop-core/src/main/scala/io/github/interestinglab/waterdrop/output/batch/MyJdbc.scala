@@ -1,6 +1,6 @@
 package io.github.interestinglab.waterdrop.output.batch
 
-import io.github.interestinglab.waterdrop.config.{Config, ConfigFactory, RegisterHiveSqlDialect}
+import io.github.interestinglab.waterdrop.config.{Config, ConfigFactory}
 import io.github.interestinglab.waterdrop.apis.BaseOutput
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 
@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
  * JDBC Output supports at least: MySQL, Oracle, PostgreSQL, SQLite
 
  * */
-class Jdbc extends BaseOutput {
+class MyJdbc extends BaseOutput {
 
   var firstProcess = true
 
@@ -78,8 +78,10 @@ class Jdbc extends BaseOutput {
 
   override def process(df: Dataset[Row]): Unit = {
 
-    RegisterHiveSqlDialect.register()
-
+    val prop = new java.util.Properties
+    prop.setProperty("driver", config.getString("driver"))
+    prop.setProperty("user", config.getString("user"))
+    prop.setProperty("password", config.getString("password"))
 
     val saveMode = config.getString("save_mode")
 

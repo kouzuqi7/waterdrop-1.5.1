@@ -6,7 +6,7 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 import scala.collection.JavaConversions._
 
-class Rename extends BaseFilter {
+class MyJoin extends BaseFilter {
 
   var conf: Config = ConfigFactory.empty()
 
@@ -24,23 +24,26 @@ class Rename extends BaseFilter {
     this.conf
   }
 
-  override def checkConfig(): (Boolean, String) = (true, "")
+  override def checkConfig(): (Boolean, String) = {
+    conf.hasPath("table_name") && conf.hasPath("key1") && conf.hasPath("key2") match {
+      case true => (true, "")
+      case false => (false, "please specify [table_name] and join field [key1, key2]")
+    }
+  }
 
   override def prepare(spark: SparkSession): Unit = {
-    super.prepare(spark)
+
     val defaultConfig = ConfigFactory.parseMap(
       Map(
-        "source_field" -> "raw_message",
-        "target_field" -> "renamed"
+        "join_type" -> "inner"
       )
     )
+
     conf = conf.withFallback(defaultConfig)
   }
 
   override def process(spark: SparkSession, df: Dataset[Row]): Dataset[Row] = {
-    println("rename$$$$$$$$$$$$$$$$$$$$$$$$$")
-    println(df.withColumnRenamed(conf.getString("source_field"), conf.getString("target_field")))
-    println("rename$$$$$$$$$$$$$$$$$$$$$$$$$eeeeeeeeeeeeeeee")
-    df.withColumnRenamed(conf.getString("source_field"), conf.getString("target_field"))
+    val staticDf = spark.read.table(this.conf.getString("table_name"))
+    df.join(staticDf, df(this.conf.getString("key1")) === staticDf(this.conf.getString("key2")), this.conf.getString("join_type"))
   }
 }

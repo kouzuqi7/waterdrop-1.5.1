@@ -24,7 +24,8 @@ object Waterdrop extends Logging {
 
   def main(args: Array[String]) {
 
-    var cmdArgs: CommandLineArgs =  CommandLineArgs("client", "D:\\javapro\\Waterdrop\\conf\\mysql_host03.conf",false)
+    var cmdArgs: CommandLineArgs =  CommandLineArgs("client", "D:\\javapro\\Waterdrop\\conf\\test-hive-out2.conf",false)
+    //var cmdArgs: CommandLineArgs =  CommandLineArgs("client", "D:\\javapro\\Waterdrop\\conf\\mysql_host03.conf",false)
     var x: Option[CommandLineArgs] = Option(cmdArgs)
     x match {
       case Some(cmdArgs) => {
