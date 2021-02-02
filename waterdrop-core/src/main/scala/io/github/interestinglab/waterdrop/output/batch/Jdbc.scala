@@ -1,9 +1,11 @@
 package io.github.interestinglab.waterdrop.output.batch
 
+import io.github.interestinglab.waterdrop.utils.JDBCUtil
 import io.github.interestinglab.waterdrop.config.{Config, ConfigFactory, RegisterHiveSqlDialect}
 import io.github.interestinglab.waterdrop.apis.BaseOutput
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 
 /**
@@ -77,20 +79,51 @@ class Jdbc extends BaseOutput {
   }
 
   override def process(df: Dataset[Row]): Unit = {
-
-    RegisterHiveSqlDialect.register()
-
-
     val saveMode = config.getString("save_mode")
+    val isUpdate = config.getString("is_update")
+    val table = config.getString("table")
+
+    if (isUpdate == "true") {
+      val jdbcU = new JDBCUtil(config.getString("url"), config.getString("user"),config.getString("password"),config.getString("driver"))
+
+      val arrayBuffer = new ArrayBuffer[String]()
+      var count = 1
+      val DB_BATCH_UPDATE_SIZE = 100
+
+      var array = df.collect
+      for(i <- 0 to array.length-1){
+        val key = config.getString("key")
+        val value = array(i).getAs[Object](config.getString("key"))
+
+        //业务处理逻辑
+        val deleteSql = "delete from " + s"$table " + "where " + s"$key = '$value'"
+        arrayBuffer += deleteSql
+
+        //batch insert
+        if (count % DB_BATCH_UPDATE_SIZE == 0){
+          jdbcU.executeBatchUpdate(arrayBuffer)
+          arrayBuffer.clear()
+        }
+        count = count + 1
+      }
+
+      //batch insert
+      jdbcU.executeBatchUpdate(arrayBuffer)
+    }
+
+    val prop = new java.util.Properties
+    prop.setProperty("driver", config.getString("driver"))
+    prop.setProperty("user", config.getString("user"))
+    prop.setProperty("password", config.getString("password"))
 
     if (firstProcess) {
-      df.write.mode(saveMode).jdbc(config.getString("url"), config.getString("table"), prop)
+      df.write.mode(saveMode).jdbc(config.getString("url"), table, prop)
       firstProcess = false
     } else if (saveMode == "overwrite") {
       // actually user only want the first time overwrite in streaming(generating multiple dataframe)
-      df.write.mode(SaveMode.Append).jdbc(config.getString("url"), config.getString("table"), prop)
+      df.write.mode(SaveMode.Append).jdbc(config.getString("url"), table, prop)
     } else {
-      df.write.mode(saveMode).jdbc(config.getString("url"), config.getString("table"), prop)
+      df.write.mode(saveMode).jdbc(config.getString("url"), table, prop)
     }
   }
 }
